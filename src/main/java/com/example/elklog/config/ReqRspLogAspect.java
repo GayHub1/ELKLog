@@ -69,7 +69,7 @@ public class ReqRspLogAspect {
     webLog.setStartTime(startTime);
     webLog.setUri(request.getRequestURI());
     webLog.setUrl(request.getRequestURL().toString());
-    logger.info("{sdfdsaferoieqrhewrwjr", JSONUtil.parse(webLog));
+    logger.info("{}", JSONUtil.parse(webLog));
     return result;
   }
 
