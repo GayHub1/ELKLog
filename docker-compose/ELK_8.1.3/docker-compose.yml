@@ -1,4 +1,4 @@
-version: "2.2"
+version: "3.4"
 
 services:
   setup:
@@ -22,7 +22,7 @@ services:
         fi;
         if [ ! -f config/certs/certs.zip ]; then
           echo "Creating certs";
-          echo -ne \
+          echo -ne \e
           "instances:\n"\
           "  - name: es01\n"\
           "    dns:\n"\
@@ -64,8 +64,7 @@ services:
 
   es01:
     depends_on:
-      setup:
-        condition: service_healthy
+      - setup
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
@@ -91,7 +90,7 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
+    #mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
@@ -131,7 +130,7 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
+    #mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
@@ -171,7 +170,7 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
-    mem_limit: ${MEM_LIMIT}
+    #mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
@@ -188,12 +187,7 @@ services:
 
   kibana:
     depends_on:
-      es01:
-        condition: service_healthy
-      es02:
-        condition: service_healthy
-      es03:
-        condition: service_healthy
+      - es01,es02,es03
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     volumes:
       - certs:/usr/share/kibana/config/certs
@@ -206,7 +200,12 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-    mem_limit: ${MEM_LIMIT}
+    #mem_limit: ${MEM_LIMIT}
+#    command: >
+#      bash -c '
+#        echo "" >> /opt/kibana/config/kibana.yml &&`
+#        echo "i18n.locale: zh-CN" >> /opt/kibana/config/kibana.yml`
+#      '
     healthcheck:
       test:
         [
@@ -217,6 +216,13 @@ services:
       timeout: 10s
       retries: 120
 
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    volumes:
+      - ./logstash/config:/usr/share/logstash/pipeline
+      - ./logstash/data/movies.csv:/usr/share/logstash/data/movies.csv
+    depends_on:
+      - es01,es02,es03
 volumes:
   certs:
     driver: local

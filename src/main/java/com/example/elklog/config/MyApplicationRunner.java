@@ -21,6 +21,10 @@ public class MyApplicationRunner implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        //获取自定义注释的所有类
+
+
+
         LOG.info("########测试日志########");
     }
 }
